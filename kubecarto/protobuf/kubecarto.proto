@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package protobuf;
+
+option go_package = "kubecarto/protobuf";
+
+message ClientInfo {
+  string hostName = 1;
+  string IPAddress = 2;
+}
+
+message APILog {
+  uint64 id = 1;
+  string timeStamp = 2;
+
+  string srcCluster = 11;
+  string srcNamespace = 12;
+  string srcName = 13;
+  map<string, string> srcLabel = 14;
+
+  string srcType = 21;
+  string srcIP = 22;
+  string srcPort = 23;
+
+  string dstCluster = 31;
+  string dstNamespace = 32;
+  string dstName = 33;
+  map<string, string> dstLabel = 34;
+
+  string dstType = 41;
+  string dstIP = 42;
+  string dstPort = 43;
+
+  string protocol = 51;
+  string method = 52;
+  string path = 53;
+  int32 responseCode = 54;
+}
+
+message MetricValue {
+  map<string, string> value = 1;
+}
+
+message EnvoyMetrics {
+  string timeStamp = 1;
+
+  string namespace = 11;
+  string name = 12;
+  string IPAddress = 13;
+  map<string, string> labels = 14;
+
+  map<string, MetricValue> metrics = 21;
+}
+
+message Response {
+    int32 msg = 1;
+}
+
+message Deploy {
+  string cluster = 1;
+  string namespace = 2;
+  string name = 3;
+  int32 desiredReplicas = 4;
+  int32 availableReplicas = 5;
+  map<string, string> labels = 6;
+  string creationTimestamp = 7;
+}
+
+message Pod {
+  string cluster = 1;
+  string namespace = 2;
+  string name = 3;
+  string nodeName = 4;
+  string podIP = 5;
+  string status = 6;
+  map<string, string> labels = 7;
+  string creationTimestamp = 8;
+}
+
+message Service {
+  string cluster = 1;
+  string namespace = 2;
+  string name = 3;
+  string type = 4;
+  string clusterIP = 5;
+  repeated Port ports = 6;
+  map<string, string> labels = 7;
+  repeated string externalIPs = 8;
+  repeated string loadBalancerIPs = 9;
+}
+
+message Port {
+  int32 port = 1;
+  int32 targetPort = 2;
+  string protocol = 3;
+}
+
+service KubeCarto {
+  // manager -> client
+  rpc GetAPILog(ClientInfo) returns (stream APILog);
+  rpc GetEnvoyMetrics(ClientInfo) returns (stream EnvoyMetrics);
+
+  rpc AddDeployEventDB(ClientInfo) returns (stream Deploy);
+  rpc UpdateDeployEventDB(ClientInfo) returns (stream Deploy);
+  rpc DeleteDeployEventDB(ClientInfo) returns (stream Deploy);
+
+  rpc AddPodEventDB(ClientInfo) returns (stream Pod);
+  rpc UpdatePodEventDB(ClientInfo) returns (stream Pod);
+  rpc DeletePodEventDB(ClientInfo) returns (stream Pod);
+
+  rpc AddSvcEventDB(ClientInfo) returns (stream Service);
+  rpc UpdateSvcEventDB(ClientInfo) returns (stream Service);
+  rpc DeleteSvcEventDB(ClientInfo) returns (stream Service);
+
+  // agent -> manager
+  rpc GiveAPILog(stream APILog) returns (Response);
+  rpc GiveEnvoyMetrics(stream EnvoyMetrics) returns (Response);
+
+  rpc AddDeployEvent(Deploy) returns (Response);
+  rpc UpdateDeployEvent(Deploy) returns (Response);
+  rpc DeleteDeployEvent(Deploy) returns (Response);
+
+  rpc AddPodEvent(Pod) returns (Response);
+  rpc UpdatePodEvent(Pod) returns (Response);
+  rpc DeletePodEvent(Pod) returns (Response);
+
+  rpc AddSvcEvent(Service) returns (Response);
+  rpc UpdateSvcEvent(Service) returns (Response);
+  rpc DeleteSvcEvent(Service) returns (Response);
+}

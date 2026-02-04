@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package protobuf;
+
+option go_package = "kubecarto/protobuf";
+
+message APIClassifierRequest {
+  repeated string API = 1;
+}
+
+message APIClassifierResponse {
+  map<string, uint64> APIs = 1;
+}
+
+service APIClassifier {
+  rpc ClassifyAPIs(stream APIClassifierRequest) returns (stream APIClassifierResponse);
+}
