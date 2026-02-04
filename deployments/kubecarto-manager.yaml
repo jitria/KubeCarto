@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kubecarto
+  name: kubecarto-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubecarto-manager
+  template:
+    metadata:
+      labels:
+        app: kubecarto-manager
+    spec:
+      serviceAccountName: kubecarto-sa
+      containers:
+      - name: kubecarto-manager
+        image: boanlab/kubecarto-manager:v0.1
+        ports:
+        - name: agent-grpc
+          protocol: TCP
+          containerPort: 5317
+        - name: kubecarto-grpc
+          protocol: TCP
+          containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kubecarto
+  name: kubecarto-manager
+spec:
+  selector:
+    app: kubecarto-manager
+  ports:
+  - name: agent-grpc
+    protocol: TCP
+    port: 5317
+    targetPort: 5317
+  - name: kubecarto-grpc
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
